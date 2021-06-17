@@ -10,7 +10,7 @@ const (
 )
 
 // db configuration
-type dbConfig struct {
+type DBConfig struct {
 	Host     string `required:"true"`
 	Port     string `required:"true"`
 	User     string `required:"true" default:"tgbot"`
@@ -19,18 +19,18 @@ type dbConfig struct {
 }
 
 // tg config
-type tgConfig struct {
+type TGConfig struct {
 	Token string `required:"true"`
 	Debug bool   `default:"true"`
 }
 
-type config struct {
-	DB dbConfig
-	TG tgConfig
+type Config struct {
+	DB DBConfig
+	TG TGConfig
 }
 
-func ParseCfg() *config {
-	cfg := config{}
+func ParseCfg() *Config {
+	cfg := Config{}
 	envconfig.MustProcess(DataBase, &cfg.DB)
 	envconfig.MustProcess(BotAPi, &cfg.TG)
 	return &cfg

@@ -1,8 +1,9 @@
-package users
+package users_pg
 
 import (
 	"context"
 	"github.com/azubkokshe/tg-group-promouter/models"
+	"github.com/azubkokshe/tg-group-promouter/store/users"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -11,7 +12,7 @@ type Repository struct {
 	insertQuery string
 }
 
-func NewRepository(db *sqlx.DB) Store {
+func NewRepository(db *sqlx.DB) users.Store {
 	return &Repository{
 		DB: db,
 		insertQuery: `INSERT INTO tbl_user (id, first_name, last_name, username, is_bot)
@@ -30,8 +31,7 @@ func (r *Repository) Store(_ context.Context, tx *sqlx.Tx, user *models.User) er
 		return err
 	}
 	query = tx.Rebind(query)
-	var id int64
-	err = tx.Get(&id, query, args...)
+	_, err = tx.Exec(query, args...)
 	if err != nil {
 		return err
 	}
