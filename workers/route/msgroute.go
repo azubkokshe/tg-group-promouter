@@ -10,16 +10,22 @@ import (
 type Route int
 
 const (
+	UnknownRoute    Route = -1
 	NewChannelRoute Route = 0
 	NewUserInvite   Route = 1
+	NewCommand      Route = 2
 )
 
 func (r Route) String() string {
 	switch r {
+	case UnknownRoute:
+		return "Unknown route"
 	case NewChannelRoute:
-		return "Handle new channel"
+		return "Handle new channel registration on bot"
 	case NewUserInvite:
-		return "Handle new members"
+		return "Handle new members in channel"
+	case NewCommand:
+		return "Handle new bot command"
 	}
 	return "unknown"
 }
@@ -35,20 +41,20 @@ func (w *Worker) Start() {
 
 	go func() {
 		for msg := range w.MsgChan {
-
-			fmt.Printf("receive: %#v\n", msg.Message)
+			r := UnknownRoute
 
 			if isNewChannel(msg) {
-				if err := w.send(NewChannelRoute, msg); err != nil {
-					log.Println(err)
-				}
-				continue
+				r = NewChannelRoute
 			} else if isNewInvite(msg) {
-				log.Println("WOW new invite")
-				if err := w.send(NewUserInvite, msg); err != nil {
+				r = NewUserInvite
+			} else if msg.Message.IsCommand() {
+				r = NewCommand
+			}
+
+			if r != UnknownRoute {
+				if err := w.send(r, msg); err != nil {
 					log.Println(err)
 				}
-				continue
 			}
 		}
 	}()

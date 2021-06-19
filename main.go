@@ -7,6 +7,7 @@ import (
 	"github.com/azubkokshe/tg-group-promouter/store/invites/invites_pg"
 	"github.com/azubkokshe/tg-group-promouter/store/users/users_pg"
 	"github.com/azubkokshe/tg-group-promouter/workers/channel"
+	"github.com/azubkokshe/tg-group-promouter/workers/command"
 	"github.com/azubkokshe/tg-group-promouter/workers/consume"
 	"github.com/azubkokshe/tg-group-promouter/workers/invite"
 	"github.com/azubkokshe/tg-group-promouter/workers/route"
@@ -57,6 +58,7 @@ func main() {
 	routes := make(map[route.Route]chan *tgbotapi.Update)
 	routes[route.NewChannelRoute] = make(chan *tgbotapi.Update, 10000)
 	routes[route.NewUserInvite] = make(chan *tgbotapi.Update, 10000)
+	routes[route.NewCommand] = make(chan *tgbotapi.Update, 10000)
 
 	mc := make(chan *tgbotapi.Update)
 	termChan := make(chan os.Signal, 1)
@@ -99,6 +101,16 @@ func main() {
 		ChannelStore: channels_pg.NewRepository(db),
 	}
 	invites.Start()
+
+	wg.Add(1)
+	commands := command.Worker{
+		MsgChannel:  routes[route.NewCommand],
+		Wg:          wg,
+		Bot:         bot,
+		DB:          db,
+		InviteStore: invites_pg.NewRepository(db),
+	}
+	commands.Start()
 
 	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSEGV)
 
