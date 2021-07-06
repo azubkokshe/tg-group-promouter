@@ -31,8 +31,8 @@ func (r Route) String() string {
 }
 
 type Worker struct {
-	MsgChan chan *tgbotapi.Update
-	Routes  map[Route]chan *tgbotapi.Update
+	MsgChan chan tgbotapi.Update
+	Routes  map[Route]chan tgbotapi.Update
 	Wg      *sync.WaitGroup
 }
 
@@ -60,8 +60,9 @@ func (w *Worker) Start() {
 	}()
 }
 
-func (w *Worker) send(route Route, upd *tgbotapi.Update) error {
+func (w *Worker) send(route Route, upd tgbotapi.Update) error {
 	if r, ok := w.Routes[route]; ok {
+		fmt.Println("send to route", route.String())
 		r <- upd
 		return nil
 	}
@@ -69,7 +70,7 @@ func (w *Worker) send(route Route, upd *tgbotapi.Update) error {
 	return fmt.Errorf("route not found for %s", route)
 }
 
-func isNewChannel(upd *tgbotapi.Update) bool {
+func isNewChannel(upd tgbotapi.Update) bool {
 	if upd.Message != nil {
 		if upd.Message.ForwardFromChat != nil {
 			return true
@@ -79,7 +80,7 @@ func isNewChannel(upd *tgbotapi.Update) bool {
 	return false
 }
 
-func isNewInvite(upd *tgbotapi.Update) bool {
+func isNewInvite(upd tgbotapi.Update) bool {
 	if upd.Message != nil {
 		if upd.Message.NewChatMembers != nil && upd.Message.From != nil {
 			return true
