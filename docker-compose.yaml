@@ -1,0 +1,40 @@
+version: '3.1'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: tgbot
+      DB_PASSWORD: kok2021
+      DB_NAME: bot
+      TG_TOKEN: 1855914325:AAHqPWswWYbgLA-v3ue8sA0e6au_4wvQBZI
+      TG_DEBUG: "true"
+    networks:
+      - bot
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: kok2021
+      POSTGRES_USER: tgbot
+      POSTGRES_DB: bot
+    ports:
+      - 5432:5432
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks:
+      - bot
+
+volumes:
+  database:
+
+networks:
+  bot:
