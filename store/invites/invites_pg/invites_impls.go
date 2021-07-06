@@ -8,9 +8,10 @@ import (
 )
 
 type Repository struct {
-	DB          *sqlx.DB
-	insertQuery string
-	ratingQuery string
+	DB           *sqlx.DB
+	insertQuery  string
+	ratingQuery  string
+	journalQueue string
 }
 
 func NewRepository(db *sqlx.DB) invites.Store {
@@ -60,11 +61,34 @@ func NewRepository(db *sqlx.DB) invites.Store {
 								  user_id,
 								  user_name
 						ORDER BY count DESC;`,
+		journalQueue: `
+						INSERT INTO tbl_journal
+									(
+												record
+									)
+									VALUES
+									(
+												:record
+									);
+						`,
 	}
 }
 
 func (r *Repository) Store(ctx context.Context, tx *sqlx.Tx, invite *models.Invites) error {
 	query, args, err := sqlx.Named(r.insertQuery, invite)
+	if err != nil {
+		return err
+	}
+	query = tx.Rebind(query)
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Repository) Journal(ctx context.Context, tx *sqlx.Tx, journal *models.Journal) error {
+	query, args, err := sqlx.Named(r.journalQueue, journal)
 	if err != nil {
 		return err
 	}

@@ -12,3 +12,8 @@ type AllRating struct {
 	UserName  string `db:"user_name"`
 	Count     int64  `db:"count"`
 }
+
+type Journal struct {
+	ID     int64  `db:"id"`
+	Record []byte `db:"record"`
+}
