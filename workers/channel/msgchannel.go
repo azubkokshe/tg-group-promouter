@@ -11,7 +11,7 @@ import (
 )
 
 type Worker struct {
-	MsgChannel chan *tgbotapi.Update
+	MsgChannel chan tgbotapi.Update
 	Wg         *sync.WaitGroup
 	Bot        *tgbotapi.BotAPI
 	Store      channels.Store

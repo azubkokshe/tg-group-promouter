@@ -11,7 +11,7 @@ import (
 )
 
 type Worker struct {
-	MsgChannel  chan *tgbotapi.Update
+	MsgChannel  chan tgbotapi.Update
 	Wg          *sync.WaitGroup
 	Bot         *tgbotapi.BotAPI
 	InviteStore invites.Store
@@ -77,6 +77,24 @@ func (w *Worker) Start() {
 
 				text.WriteString(fmt.Sprintf("Количество приглашенных: %d\n", (*rating)[idx].Count))
 				text.WriteString(fmt.Sprintf("Место в рейтинге: %d из %d", idx+1, len(*rating)))
+
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, text.String())
+				msg.ReplyToMessageID = update.Message.MessageID
+				_, err := w.Bot.Send(msg)
+				if err != nil {
+					fmt.Println("an error occurred", err)
+				}
+			case "info":
+
+				text := strings.Builder{}
+
+				text.WriteString(fmt.Sprintf("О конкурсе\n\n"))
+				text.WriteString(fmt.Sprintf("Всё достаточно просто 😀 Приглашаешь людей в группу до ❗23:59 25.06.2021❗ и " +
+					"если окажешься в топе турнирной таблицы, то получаешь денежное вознаграждение 🤑\n\n"))
+				text.WriteString(fmt.Sprintf("1 место: 4000 тг.\n"))
+				text.WriteString(fmt.Sprintf("2 место: 3000 тг.\n"))
+				text.WriteString(fmt.Sprintf("3 место: 2000 тг.\n\n"))
+				text.WriteString(fmt.Sprintf("Удачи!!!😜"))
 
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, text.String())
 				msg.ReplyToMessageID = update.Message.MessageID

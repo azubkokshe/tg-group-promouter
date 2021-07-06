@@ -2,6 +2,8 @@ package invite
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/azubkokshe/tg-group-promouter/models"
 	"github.com/azubkokshe/tg-group-promouter/store/channels"
 	"github.com/azubkokshe/tg-group-promouter/store/invites"
@@ -13,7 +15,7 @@ import (
 )
 
 type Worker struct {
-	MsgChannel   chan *tgbotapi.Update
+	MsgChannel   chan tgbotapi.Update
 	Wg           *sync.WaitGroup
 	Bot          *tgbotapi.BotAPI
 	ChannelStore channels.Store
@@ -22,7 +24,7 @@ type Worker struct {
 	DB           *sqlx.DB
 }
 
-func (w *Worker) regInvite(update *tgbotapi.Update) error {
+func (w *Worker) regInvite(update tgbotapi.Update) error {
 	//Сначала узнаем мониторим ли мы канал
 	chnl, err := w.ChannelStore.GetByID(context.Background(), update.Message.Chat.ID)
 	if err != nil {
@@ -34,6 +36,23 @@ func (w *Worker) regInvite(update *tgbotapi.Update) error {
 	u2a = append(u2a, *update.Message.NewChatMembers...)
 
 	tx := w.DB.MustBegin()
+
+	//Необходимо на всякие пожарные на первых порах сохранять записи в журнал
+	if j, err := json.Marshal(update); err == nil {
+		if err := w.InviteStore.Journal(context.Background(), tx, &models.Journal{
+			Record: j,
+		}); err != nil {
+			if err := tx.Rollback(); err != nil {
+				log.Println(err)
+			}
+			return err
+		}
+	} else {
+		if err := tx.Rollback(); err != nil {
+			log.Println(err)
+		}
+		return err
+	}
 
 	//Теперь зарегаем нового юзера, который пригласил
 	for _, u := range u2a {
@@ -57,6 +76,10 @@ func (w *Worker) regInvite(update *tgbotapi.Update) error {
 	}
 
 	for _, m := range *(update.Message.NewChatMembers) {
+		if m.IsBot {
+			continue
+		}
+
 		if err = w.InviteStore.Store(context.Background(), tx, &models.Invites{
 			ChannelID: chnl.ID,
 			FromID:    int64(update.Message.From.ID),
@@ -86,6 +109,7 @@ func (w *Worker) Start() {
 
 	go func() {
 		for update := range w.MsgChannel {
+			fmt.Println("new invite")
 			if err := w.regInvite(update); err != nil {
 				log.Println(err)
 			}
