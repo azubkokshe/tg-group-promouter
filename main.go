@@ -26,14 +26,14 @@ import (
 )
 
 func init() {
-	os.Setenv("DB_HOST", "127.0.0.1")
-	os.Setenv("DB_PORT", "5432")
-	os.Setenv("DB_USER", "tgbot")
-	os.Setenv("DB_PASSWORD", "tg_b_o_t")
-	os.Setenv("DB_NAME", "tg_bot")
-
-	os.Setenv("TG_TOKEN", "1855914325:AAHqPWswWYbgLA-v3ue8sA0e6au_4wvQBZI")
-	os.Setenv("TG_DEBUG", "true")
+	//os.Setenv("DB_HOST", "127.0.0.1")
+	//os.Setenv("DB_PORT", "5432")
+	//os.Setenv("DB_USER", "tgbot")
+	//os.Setenv("DB_PASSWORD", "tg_b_o_t")
+	//os.Setenv("DB_NAME", "tg_bot")
+	//
+	//os.Setenv("TG_TOKEN", "1855914325:AAHqPWswWYbgLA-v3ue8sA0e6au_4wvQBZI")
+	//os.Setenv("TG_DEBUG", "true")
 }
 
 //TODO update channel title if exists
@@ -55,12 +55,12 @@ func main() {
 	updates, err := bot.GetUpdatesChan(u)
 	panicOnErr(err)
 
-	routes := make(map[route.Route]chan *tgbotapi.Update)
-	routes[route.NewChannelRoute] = make(chan *tgbotapi.Update, 10000)
-	routes[route.NewUserInvite] = make(chan *tgbotapi.Update, 10000)
-	routes[route.NewCommand] = make(chan *tgbotapi.Update, 10000)
+	routes := make(map[route.Route]chan tgbotapi.Update)
+	routes[route.NewChannelRoute] = make(chan tgbotapi.Update, 10000)
+	routes[route.NewUserInvite] = make(chan tgbotapi.Update, 10000)
+	routes[route.NewCommand] = make(chan tgbotapi.Update, 10000)
 
-	mc := make(chan *tgbotapi.Update)
+	mc := make(chan tgbotapi.Update)
 	termChan := make(chan os.Signal, 1)
 	wg := &sync.WaitGroup{}
 
